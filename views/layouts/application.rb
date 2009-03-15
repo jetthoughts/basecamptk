@@ -1,7 +1,7 @@
 class Application
 
   attr_accessor :projects_frame, :posts_frame, :post_frame, :spent_time_frame
-  attr_accessor :on_menu_preferences
+  attr_accessor :on_menu_preferences, :on_menu_reload
 
   def initialize(projects_frame = TkFrame, posts_frame = TkFrame, post_frame = TkFrame, spent_time_frame = TkFrame)
     @root = TkRoot.new {title "Time Tracker For Redmine"}
@@ -41,6 +41,10 @@ class Application
     file_menu.add('command',
                   'label'     => "Preferences",
                   'command'   => proc{@on_menu_preferences.call},
+                  'underline' => 0)
+    file_menu.add('command',
+                  'label'     => "Reload",
+                  'command'   => proc{@on_menu_reload.call},
                   'underline' => 0)
     menu_bar = TkMenu.new
     menu_bar.add('cascade',

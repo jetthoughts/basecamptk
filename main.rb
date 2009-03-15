@@ -54,7 +54,7 @@ end
 def alert(e)
   Tk.messageBox(
                   'type'    => "ok",  
-                  'icon'    => "alert",
+                  'icon'    => "error",
                   'title'   => "Error",
                   'message' => e
                )
@@ -65,8 +65,11 @@ def log(title, collection, method)
 end
 
 def load_projects
+  @app.projects_frame.projects = []
   @projects = Project.active
+  puts "load projects"
   #log("Projects", @projects, 'name')
+  @app.projects_frame.projects = @projects
 rescue => e
   alert(e)
 end
@@ -76,18 +79,49 @@ def set_authentication(user, password)
 end
 
 def load_config
-  @config = YAML.load_file("config.yml")
-  set_authentication(@config["user"], @config["password"])
+  $config = YAML.load_file("config.yml")
+  set_authentication($config["user"], $config["password"])
 end
 
 def save_config
   File.truncate("config.yml", 0)
   f = File.new("config.yml", "w")
-  f.write(YAML::dump(@config))
+  f.write(YAML::dump($config))
   f.close
 end
 
 def show_preferences
+  begin
+    $win.destroy
+  rescue
+  end
+  $win = TkToplevel.new
+  raw = TkFrame.new($win).pack(:side => 'top', :fill => 'x')
+  TkLabel.new(raw){text "User Name:"}.pack(:side => "left")
+  $user = TkEntry.new(raw){width(15); value=$config[:user]}.pack("side"=>"right", "fill"=>"x", :padx => 30, :pady => 5)
+
+  raw = TkFrame.new($win).pack(:side => 'top', :fill => 'x')
+  TkLabel.new(raw){text "Password:"}.pack(:side => "left")
+  $password = TkEntry.new(raw){width(15); value=$config[:password]}.pack("side"=>"right", "fill"=>"x", :padx => 30, :pady => 5)
+
+  raw = TkFrame.new($win).pack(:side => 'top', :fill => 'x')
+  TkButton.new(raw) {
+    text "Save"
+    command proc{on_save_pref(); $win.destroy}
+    pack("side"=>"right")
+  }
+  TkButton.new(raw) {
+    text 'Cancel'
+    command "$win.destroy"
+    pack("side"=>"right")
+  }
+end
+
+def on_save_pref
+  $config = {"user" => "#{$user.value}", "password" => "#{$password.value}"}
+  puts $config.inspect
+  save_config
+  load_config
 end
 
 #@companies = Company.find(:all)
@@ -97,18 +131,20 @@ end
 @projects = []
 @posts = []
 
-load_config
-load_projects
 
-#save_config
 
 
 @app = Application.new(ProjectIndex, PostIndex, PostShow, TimeEntryNew)
-@app.on_menu_preferences = proc{puts "prefernces"}
+@app.on_menu_preferences = proc{show_preferences}
+@app.on_menu_reload = proc{load_projects}
+
 @app.projects_frame.projects = @projects
 @app.projects_frame.onchange = proc{|id| show_posts_for(@projects[id])}
 @app.posts_frame.onchange = proc{|id| show_post(@posts[id])}
 @app.spent_time_frame.onsubmit = proc{|time_entry| commit_time time_entry}
+
+
+load_config
+load_projects
+
 @app.run
-
-

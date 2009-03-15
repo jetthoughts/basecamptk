@@ -10,6 +10,10 @@ class TimeEntryNew < TkLabelFrame
   def onsubmit=(onsubmit)
     @onsubmit = onsubmit
   end
+
+  def onstart
+    
+  end
   
   def disable
     @submit_button.state :disabled
@@ -27,16 +31,22 @@ class TimeEntryNew < TkLabelFrame
 
     raw = TkFrame.new(self).pack(:side => 'top', :fill => 'x')
     TkLabel.new(raw){text "Hours*:"}.pack(:side => "left")
-    @hours = TkEntry.new(raw){width 5}.pack("side"=>"left", "fill"=>"x", :padx => 30, :pady => 5)
+    @hours = TkEntry.new(raw){width(5); value=0}.pack("side"=>"left", "fill"=>"x", :padx => 30, :pady => 5)
 
     raw = TkFrame.new(self).pack(:side => 'top', :fill => 'x')
     TkLabel.new(raw){text "Comments:"}.pack(:side => "left")
-    @comments = TkEntry.new(raw){width 35}.pack("side"=>"left", "fill"=>"x", :padx => 6, :pady => 5)
+    @comments = TkEntry.new(raw){width 35}.pack("side"=>"left", "fill"=>"x", :expand=> true, :padx => 6, :pady => 5)
 
     submitProc = proc {submit}
+    startProc = proc {start}
     raw = TkFrame.new(self).pack(:side => 'top', :fill => 'x')
+    @start_button = TkButton.new(raw) do
+      text("Start")
+      command startProc
+      pack :side => "left", :padx => 10
+    end
     @submit_button = TkButton.new(raw) do
-      text("Save")
+      text("Commit")
       command submitProc
       pack :side => "left", :padx => 10
       state :disabled
@@ -44,7 +54,7 @@ class TimeEntryNew < TkLabelFrame
   end
   
   def validate?
-     @hours.value.to_i > 0 and @spent_on.get
+    !@hours.value.blank? and @spent_on.get
   end
   
   def submit
@@ -52,8 +62,28 @@ class TimeEntryNew < TkLabelFrame
     @submit_button.state :disabled
     @onsubmit.call(:description => @comments.value,
                    :hours => @hours.value,
-                   :date => @spent_on.get,
-                   :person_id => 2965770)
+                   :date => @spent_on.get)
     @submit_button.state :normal
+  end
+
+  def start
+    stopProc = proc {stop}
+    @start_button.command = stopProc
+    @seconds = @hours.value.blank? ? Time.parse("00:00") : Time.parse(@hours.value)
+    @counter_thread = Thread.new { loop {counter} }
+    @start_button.text("Stop")
+  end
+
+  def counter
+    sleep(1)
+    @seconds += 1
+    @hours.value = Time.at(@seconds).strftime("%H:%M")
+  end
+
+  def stop
+    Thread.kill(@counter_thread)
+    startProc = proc {start}
+    @start_button.command = startProc
+    @start_button.text("Start")
   end
 end

@@ -4,21 +4,19 @@ class Project < Rest
     "#{name} [#{self.company.name}]"
   end
   
-  def posts
+  def posts()
     @posts ||= Post.find_by_project(self)
   end
 
-  def self.archived
-    @projects ||= self.all
-    @projects.reject{|p|p.status!="archived"}
+  def self.archived(reload=false)
+    self.all(reload).reject{|p|p.status!="archived"}
   end
 
-  def self.active
-    @projects ||= self.all
-    @projects.reject{|p|p.status!="active"}
+  def self.active(reload=false)
+    self.all(reload).reject{|p|p.status!="active"}
   end
 
-  def self.all
-    @projects ||= Project.find(:all)
+  def self.all(reload=false)
+    @projects = (!reload and @projects) || Project.find(:all)
   end
 end

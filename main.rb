@@ -65,9 +65,9 @@ def log(title, collection, method)
   puts "= #{title}:\n  " + collection.map{|p|p.send(method)}.join("\n  ") + "\n"
 end
 
-def load_projects
+def load_projects(reload = false)
   @app.projects_frame.projects = []
-  @projects = Project.active
+  @projects = Project.active(reload)
   #log("Projects", @projects, 'name')
   @app.projects_frame.projects = @projects
 rescue => e
@@ -109,10 +109,7 @@ end
 
 @app = Application.new(ProjectIndex, PostIndex, PostShow, TimeEntryNew)
 @app.on_menu_preferences = proc{show_preferences}
-@app.on_menu_reload = proc{load_projects}
-
-
-@app.projects_frame.projects = @projects
+@app.on_menu_reload = proc{load_projects(true)}
 @app.projects_frame.onchange = proc{|id| show_posts_for(@projects[id])}
 
 @app.posts_frame.onchange = proc{|id| show_post(@posts[id])}

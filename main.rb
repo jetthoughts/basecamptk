@@ -67,7 +67,6 @@ end
 def load_projects
   @app.projects_frame.projects = []
   @projects = Project.active
-  puts "load projects"
   #log("Projects", @projects, 'name')
   @app.projects_frame.projects = @projects
 rescue => e
@@ -95,14 +94,16 @@ def show_preferences
     $win.destroy
   rescue
   end
-  $win = TkToplevel.new
+  $win = TkToplevel.new(:title => "Prefernce")
   raw = TkFrame.new($win).pack(:side => 'top', :fill => 'x')
   TkLabel.new(raw){text "User Name:"}.pack(:side => "left")
-  $user = TkEntry.new(raw){width(15); value=$config[:user]}.pack("side"=>"right", "fill"=>"x", :padx => 30, :pady => 5)
+  $user = TkEntry.new(raw){width(15)}.pack("side"=>"right", "fill"=>"x", :padx => 30, :pady => 5)
+  $user.value = $config["user"]
 
   raw = TkFrame.new($win).pack(:side => 'top', :fill => 'x')
   TkLabel.new(raw){text "Password:"}.pack(:side => "left")
-  $password = TkEntry.new(raw){width(15); value=$config[:password]}.pack("side"=>"right", "fill"=>"x", :padx => 30, :pady => 5)
+  $password = TkEntry.new(raw){width(15); value=$config["password"]}.pack("side"=>"right", "fill"=>"x", :padx => 30, :pady => 5)
+  $password.value = $config["password"]
 
   raw = TkFrame.new($win).pack(:side => 'top', :fill => 'x')
   TkButton.new(raw) {
@@ -119,7 +120,6 @@ end
 
 def on_save_pref
   $config = {"user" => "#{$user.value}", "password" => "#{$password.value}"}
-  puts $config.inspect
   save_config
   load_config
 end
@@ -131,18 +131,17 @@ end
 @projects = []
 @posts = []
 
-
-
-
 @app = Application.new(ProjectIndex, PostIndex, PostShow, TimeEntryNew)
 @app.on_menu_preferences = proc{show_preferences}
 @app.on_menu_reload = proc{load_projects}
 
+
 @app.projects_frame.projects = @projects
 @app.projects_frame.onchange = proc{|id| show_posts_for(@projects[id])}
+@app.projects_frame.on_mode_change = Proc.new {puts 'hello'}
+
 @app.posts_frame.onchange = proc{|id| show_post(@posts[id])}
 @app.spent_time_frame.onsubmit = proc{|time_entry| commit_time time_entry}
-
 
 load_config
 load_projects

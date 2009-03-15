@@ -8,6 +8,7 @@ require 'tkextlib/iwidgets'
 require "activeresource"
 
 #Load libraries
+MODES = ["Messages", "Todos", "People"]
 MODELS_PATH = "models"
 VIEWS_PATH = "views"
 
@@ -90,36 +91,11 @@ def save_config
 end
 
 def show_preferences
-  begin
-    $win.destroy
-  rescue
-  end
-  $win = TkToplevel.new(:title => "Prefernce")
-  raw = TkFrame.new($win).pack(:side => 'top', :fill => 'x')
-  TkLabel.new(raw){text "User Name:"}.pack(:side => "left")
-  $user = TkEntry.new(raw){width(15)}.pack("side"=>"right", "fill"=>"x", :padx => 30, :pady => 5)
-  $user.value = $config["user"]
-
-  raw = TkFrame.new($win).pack(:side => 'top', :fill => 'x')
-  TkLabel.new(raw){text "Password:"}.pack(:side => "left")
-  $password = TkEntry.new(raw){width(15); value=$config["password"]}.pack("side"=>"right", "fill"=>"x", :padx => 30, :pady => 5)
-  $password.value = $config["password"]
-
-  raw = TkFrame.new($win).pack(:side => 'top', :fill => 'x')
-  TkButton.new(raw) {
-    text "Save"
-    command proc{on_save_pref(); $win.destroy}
-    pack("side"=>"right")
-  }
-  TkButton.new(raw) {
-    text 'Cancel'
-    command "$win.destroy"
-    pack("side"=>"right")
-  }
+  PreferenceEdit.new($config["user"], $config["password"], proc{|u,p| save_pref(u,p)})
 end
 
-def on_save_pref
-  $config = {"user" => "#{$user.value}", "password" => "#{$password.value}"}
+def save_pref(user, password)
+  $config = {"user" => user, "password" => password}
   save_config
   load_config
 end
@@ -138,7 +114,6 @@ end
 
 @app.projects_frame.projects = @projects
 @app.projects_frame.onchange = proc{|id| show_posts_for(@projects[id])}
-@app.projects_frame.on_mode_change = Proc.new {puts 'hello'}
 
 @app.posts_frame.onchange = proc{|id| show_post(@posts[id])}
 @app.spent_time_frame.onsubmit = proc{|time_entry| commit_time time_entry}

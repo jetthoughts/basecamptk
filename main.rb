@@ -41,7 +41,7 @@ def show_posts
     end
 end
 def show_todos
-    @todo_lists = TodoList.find(:all)
+    @todo_lists = @project ? TodoList.find_by_project(@project) : TodoList.find(:all)
     entries, todo_items = [], []
     @todo_items = []
     @todo_lists.each do |i|

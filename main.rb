@@ -41,11 +41,21 @@ def show_posts
     end
 end
 def show_todos
-    @todos = @project.todos
-    @app.todos_frame.entries = @todos.map do |i|
-        "#{i.author_name}: " +
-          "#{i.title}"
+    @todo_lists = TodoList.find(:all)
+    entries, todo_items = [], []
+    @todo_items = []
+    @todo_lists.each do |i|
+        todo_items = TodoItem.find_by_todo_list(i.id)
+        entries << todo_items.map{|item| "#{i.name}: #{item.content}"}
+        @todo_items << todo_items
     end
+    @todo_items = @todo_items.flatten
+    @app.todos_frame.entries = entries.flatten
+end
+
+def show_todo(item)
+  @todo = item
+  @app.todo_frame.entry = @todo
 end
 
 def commit_time(time_entry)
@@ -117,18 +127,17 @@ end
 #log("Companies", @companies, 'name')
 #@people = Person.find_all
 
-@projects = []
-@posts = []
-
-@app = Application.new(:projects_frame => ProjectIndex, :posts_frame => PostIndex, :post_frame => PostShow, :spent_time_frame => TimeEntryNew, :todos_frame => TodoIndex)
+@app = Application.new(:projects_frame => ProjectIndex, :posts_frame => PostIndex, :post_frame => PostShow, :spent_time_frame => TimeEntryNew, :todos_frame => TodoIndex, :todo_frame => TodoShow)
 @app.on_menu_preferences = proc{show_preferences}
 @app.on_menu_reload = proc{load_projects(true)}
 @app.projects_frame.onchange = proc{|id| show_data_for(@projects[id])}
 
 @app.posts_frame.onchange = proc{|id| show_post(@posts[id])}
+@app.todos_frame.onchange = proc{|id| show_todo(@todo_items[id])}
 @app.spent_time_frame.onsubmit = proc{|time_entry| commit_time time_entry}
 
 load_config
 load_projects
+show_todos
 
 @app.run

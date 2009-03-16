@@ -1,6 +1,6 @@
 class Application
 
-  attr_accessor :projects_frame, :posts_frame, :post_frame, :spent_time_frame, :todos_frame
+  attr_accessor :projects_frame, :posts_frame, :post_frame, :spent_time_frame, :todos_frame, :todo_frame
   attr_accessor :on_menu_preferences, :on_menu_reload
 
   def initialize(options = {})

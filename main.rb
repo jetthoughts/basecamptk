@@ -8,14 +8,15 @@ require 'tkextlib/iwidgets'
 require "activeresource"
 
 #Load libraries
-MODES = ["Messages", "Todos", "People"]
 MODELS_PATH = "models"
 VIEWS_PATH = "views"
+HELPERS_PATH = "helpers"
 
 require "models/rest"
-libfilespat = File.join("**", "{#{VIEWS_PATH},#{MODELS_PATH}}", "**", "*.rb")
+libfilespat = File.join("**", "{#{VIEWS_PATH},#{MODELS_PATH},#{HELPERS_PATH}}", "**", "*.rb")
 Dir.glob(libfilespat).each{|lib| require lib}
 
+PROJECT_VIEWS = {"Messages" => PostIndex, "Todos" => TodoIndex, "People" => PersonIndex }
 
 # Controller
 def show_content(cont)
@@ -31,15 +32,20 @@ def show_post(post)
     @app.post_frame.entry = @post
 end
 
-def show_posts_for(project)
-    @project = project
-    @posts = project.posts
+def show_posts
+    @posts = @project.posts
 #    log("Posts for '#{project.name}'", @posts, 'title')
     @app.posts_frame.entries = @posts.map do |i|
         "#{i.author_name}: " +
           "#{i.title}"
     end
-    @app.spent_time_frame.enable
+end
+def show_todos
+    @todos = @project.todos
+    @app.todos_frame.entries = @todos.map do |i|
+        "#{i.author_name}: " +
+          "#{i.title}"
+    end
 end
 
 def commit_time(time_entry)
@@ -100,6 +106,13 @@ def save_pref(user, password)
   load_config
 end
 
+def show_data_for(project)
+  @project = project
+  show_posts
+  show_todos
+  @app.spent_time_frame.enable
+end
+
 #@companies = Company.find(:all)
 #log("Companies", @companies, 'name')
 #@people = Person.find_all
@@ -107,10 +120,10 @@ end
 @projects = []
 @posts = []
 
-@app = Application.new(ProjectIndex, PostIndex, PostShow, TimeEntryNew)
+@app = Application.new(:projects_frame => ProjectIndex, :posts_frame => PostIndex, :post_frame => PostShow, :spent_time_frame => TimeEntryNew, :todos_frame => TodoIndex)
 @app.on_menu_preferences = proc{show_preferences}
 @app.on_menu_reload = proc{load_projects(true)}
-@app.projects_frame.onchange = proc{|id| show_posts_for(@projects[id])}
+@app.projects_frame.onchange = proc{|id| show_data_for(@projects[id])}
 
 @app.posts_frame.onchange = proc{|id| show_post(@posts[id])}
 @app.spent_time_frame.onsubmit = proc{|time_entry| commit_time time_entry}

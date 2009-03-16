@@ -8,6 +8,10 @@ class Project < Rest
     @posts ||= Post.find_by_project(self)
   end
 
+  def todos()
+    @posts ||= Post.find_by_project(self)
+  end
+
   def self.archived(reload=false)
     self.all(reload).reject{|p|p.status!="archived"}
   end

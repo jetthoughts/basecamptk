@@ -1,37 +1,69 @@
 class Application
 
-  attr_accessor :projects_frame, :posts_frame, :post_frame, :spent_time_frame
+  attr_accessor :projects_frame, :posts_frame, :post_frame, :spent_time_frame, :todos_frame
   attr_accessor :on_menu_preferences, :on_menu_reload
 
-  def initialize(projects_frame = TkFrame, posts_frame = TkFrame, post_frame = TkFrame, spent_time_frame = TkFrame)
+  def initialize(options = {})
+    opts = {:projects_frame => TkFrame,
+            :posts_frame => TkFrame,
+            :post_frame => TkFrame,
+            :todos_frame => TkFrame,
+            :todo_frame => TkFrame,
+            :spent_time_frame => TkFrame}.merge(options)
     @root = TkRoot.new {title "Time Tracker For Redmine"}
 
+    
     container = TkPanedwindow.new(@root) do
-      orient "horizontal"
+      orient "vertical"
       pack :side => "left", :fill => "both", :expand => 1
     end
-    
-    rightSide = TkPanedwindow.new(@root) do
-      orient "vertical"
-      pack :side => "right", :fill => "both", :expand => 1
+
+    topSide = TkPanedwindow.new(@root) do
+      orient "horizontal"
+      pack :side => "top", :fill => "both", :expand => 1
     end
 
-    @projects_frame = projects_frame.new(@root)
 
-    @posts_frame = posts_frame.new(@root) do
-      height 200
+    tabs = Tk::Iwidgets::Tabnotebook.new(:width=>800, :height=>300, :tabpos => 'n')
+    posts_tab = tabs.add(:label => "Messages")
+    todos_tab = tabs.add(:label => "To-Dos")
+
+    postSide = TkPanedwindow.new(posts_tab) do
+      orient "horizontal"
+      pack :side => "top", :fill => "both", :expand => 1
+    end
+    todoSide = TkPanedwindow.new(todos_tab) do
+      orient "horizontal"
+      pack :side => "top", :fill => "both", :expand => 1
+    end
+    tabs.select(0)
+
+    @projects_frame = opts[:projects_frame].new(@root) do
+      pack :expand => true, :fill => 'both', :expand => 1
     end
 
-    @post_frame = post_frame.new(@root)
-    @spent_time_frame = spent_time_frame.new(@root)
+    @posts_frame = opts[:posts_frame].new(posts_tab).pack(:side => "left", :expand => true, :fill => 'both')
+    @todos_frame = opts[:todos_frame].new(todos_tab).pack(:side => "left", :expand => true, :fill => 'both')
+    @todo_frame = opts[:todo_frame].new(todos_tab).pack
+    @post_frame = opts[:post_frame].new(@root)
+    @spent_time_frame = opts[:spent_time_frame].new(@root) do
+      pack :expand => 0
+    end
         
     
-    container.add @posts_frame
-    container.add rightSide
+    #container.add @posts_frame
+    container.add topSide
+    container.add tabs
     
-    rightSide.add @projects_frame
-    rightSide.add @spent_time_frame
-    rightSide.add @post_frame
+    topSide.add @projects_frame, :width => 300
+    topSide.add @spent_time_frame, :width => 50
+
+    postSide.add @posts_frame, :width => 300
+    postSide.add @post_frame
+
+    todoSide.add @todos_frame, :width => 300
+    todoSide.add @todo_frame
+
     init_menu
   end
 
